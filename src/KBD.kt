@@ -49,7 +49,7 @@ object KBD { // Ler teclas. Métodos retornam ‘0’..’9’,’#’,’*’ o
 fun main(args: Array<String>) {
     KBD.init()
     while (true){
-        val value = KBD.waitKey(70000)
+        val value = KBD.waitKey(80000)
         println(value)
     }
 
