@@ -1,10 +1,8 @@
 import isel.leic.utils.Time
 
 object KBD { // Ler teclas. Métodos retornam ‘0’..’9’,’#’,’*’ ou NONE.
-    const val NONE = 0.toChar();
-    val ackMASK = 0b00000001
-    val dvalMASK =  0b00010000
-    val QsignalMASK = 0b00001111
+    const val NONE = 0.toChar()
+
 
     val teclado = listOf('1', '4', '7', '*', '2', '5', '8', '0', '3', '6', '9', '#', NONE, NONE, NONE, NONE)
 
@@ -46,7 +44,7 @@ object KBD { // Ler teclas. Métodos retornam ‘0’..’9’,’#’,’*’ o
         return key
     }
 }
-fun main(args: Array<String>) {
+fun main() {
     KBD.init()
     while (true){
         val value = KBD.waitKey(80000)

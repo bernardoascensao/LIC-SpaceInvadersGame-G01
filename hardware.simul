@@ -1,3 +1,26 @@
-## --- Additional packages with Hardware to Simulator
-package isel.leic.simul
+# Generic modules to activate from Simulator
 UsbPort = UsbPort
+kbd     = Keyboard("123456789*0#",4,3,0)
+lcd     = LCD
+regLow  = Register(4)
+regHigh = Register(4)
+
+
+# --------------------------------------
+# KeyBoard Reader
+# --------------------------------------
+1 -> kbd.oe
+kbd.K[0-3] -> UsbPort.I[0-3]
+kbd.val -> UsbPort.I4
+UsbPort.O0 -> kbd.ack
+
+# --------------------------------------
+# LCD
+# --------------------------------------
+# Serial Receiver
+UsbPort.O[1-4] -> regLow.in[0-3]
+UsbPort.O5 -> lcd.rs
+regLow.out[0-3] -> lcd.D[0-3], regHigh.in[0-3]
+regHigh.out[0-3] -> lcd.D[4-7]
+UsbPort.O6 -> lcd.e
+UsbPort.O7 -> regLow.clk, regHigh.clk
