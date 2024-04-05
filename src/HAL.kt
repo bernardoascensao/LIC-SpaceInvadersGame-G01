@@ -34,13 +34,16 @@ object HAL { // Virtualiza o acesso ao sistema UsbPort
     }
     // Coloca os bits representados por mask no valor lógico ‘0’
     fun clrBits(mask: Int) {
+        val usb = UsbPort.read()
         atualStateOutput = atualStateOutput.and(mask.inv())
 
         UsbPort.write(atualStateOutput)
+        val usb1 = UsbPort.read()
     }
     // Escreve nos bits representados por mask o valor de value
     fun writeBits(mask: Int, value: Int) {
         clrBits(mask)
         setBits(value.and(mask))
+        val atualState = UsbPort.read()
     }
 }

@@ -1,7 +1,7 @@
 import isel.leic.utils.Time
 
 object KBD { // Ler teclas. Métodos retornam ‘0’..’9’,’#’,’*’ ou NONE.
-    const val NONE = 0.toChar()
+        const val NONE = 0.toChar()
 
 
     val teclado = listOf('1', '4', '7', '*', '2', '5', '8', '0', '3', '6', '9', '#', NONE, NONE, NONE, NONE)

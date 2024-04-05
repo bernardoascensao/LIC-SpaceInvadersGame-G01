@@ -83,10 +83,23 @@ object LCD { // Escreve no LCD usando a interface a 4 bits.
     // Envia comando para posicionar cursor (‘line’:0..LINES-1 , ‘column’:0..COLS-1)
     fun cursor(line: Int, column: Int){
 
+        require(line == 0 || line == 1) { "Invalid Line, must be between 0 and 1" }
+
+        var address = 0
+        if(line == 0){
+            address = address.shl(6).or(column)
+        }
+        else{
+            address = 1
+            address = address.shl(6).or(column)
+        }
+
+        //fazer operação de or para corresponder ao comando de "set DDRAM address"
+        writeCMD(address.or(0b10000000))
     }
     // Envia comando para limpar o ecrã e posicionar o cursor em (0,0)
     fun clear(){
-
+        writeCMD(0b00000001)
     }
 }
 
@@ -98,5 +111,7 @@ fun main(){
     while(true){
         val c = KBD.waitKey(8000)
         LCD.write(c)
+        Time.sleep(2000)
+        LCD.cursor(1, 5)
     }
 }
