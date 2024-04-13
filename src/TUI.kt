@@ -62,8 +62,6 @@ object TUI {
             actuaLine = 0
         }
     }
-
-
 }
 
 fun main() {

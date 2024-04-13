@@ -5,46 +5,53 @@ object LCD { // Escreve no LCD usando a interface a 4 bits.
     private const val COLS = 16
 
     // Escreve um byte de comando/dados no LCD em paralelo
-    private fun writeByteParallel(rs: Boolean, data: Int){
-        val dataLow = data.shl(1)
-        val dataHigh = data.shr(3)
-
-        if(rs) HAL.setBits(rsMASK) else HAL.clrBits(rsMASK)
-
-        // Escreve parte baixa
-        HAL.writeBits(dataMASK, dataHigh)
-        Time.sleep(30)
-
-        HAL.setBits(clkRegMASK)
-        Time.sleep(30)
-
-        HAL.clrBits(clkRegMASK)
-        Time.sleep(30)
-
-        // Escreve parte alta
-        HAL.writeBits(dataMASK, dataLow)
-        Time.sleep(30)
-
-        HAL.setBits(clkRegMASK)
-        Time.sleep(30)
-
-        HAL.clrBits(clkRegMASK)
-        Time.sleep(30)
-
-        HAL.setBits(enableMASK)
-        Time.sleep(30)
-
-        HAL.clrBits(enableMASK)
-        Time.sleep(30)
-
-    }
-    // Escreve um byte de comando/dados no LCD em série
-//    private fun writeByteSerial(rs: Boolean, data: Int){
+//    private fun writeByteParallel(rs: Boolean, data: Int){
+//        val dataLow = data.shl(1)
+//        val dataHigh = data.shr(3)
+//
+//        if(rs) HAL.setBits(rsMASK) else HAL.clrBits(rsMASK)
+//
+//        // Escreve parte baixa
+//        HAL.writeBits(dataMASK, dataHigh)
+//        Time.sleep(30)
+//
+//        HAL.setBits(clkRegMASK)
+//        Time.sleep(30)
+//
+//        HAL.clrBits(clkRegMASK)
+//        Time.sleep(30)
+//
+//        // Escreve parte alta
+//        HAL.writeBits(dataMASK, dataLow)
+//        Time.sleep(30)
+//
+//        HAL.setBits(clkRegMASK)
+//        Time.sleep(30)
+//
+//        HAL.clrBits(clkRegMASK)
+//        Time.sleep(30)
+//
+//        HAL.setBits(enableMASK)
+//        Time.sleep(30)
+//
+//        HAL.clrBits(enableMASK)
+//        Time.sleep(30)
 //
 //    }
+    // Escreve um byte de comando/dados no LCD em série
+    private fun writeByteSerial(rs: Boolean, data: Int){
+        var dataToSend = 0
+        if (rs) dataToSend = 0b000000001.or(data.shl(1)) else dataToSend = data.shl(1)
+
+
+        SerialEmitter.send(addr = SerialEmitter.Destination.LCD, dataToSend, 9)
+
+        Time.sleep(100)
+    }
     // Escreve um byte de comando/dados no LCD
     private fun writeByte(rs: Boolean, data: Int){
-        writeByteParallel(rs, data)
+//        writeByteParallel(rs, data)
+        writeByteSerial(rs, data)
     }
     // Escreve um comando no LCD
     private fun writeCMD(data: Int){
