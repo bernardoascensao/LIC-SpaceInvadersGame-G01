@@ -1,7 +1,6 @@
 object CoinAcceptor {
 
     fun init() {
-        HAL.init()
         HAL.clrBits(acceptCoinMASK)
     }
 
@@ -28,7 +27,6 @@ fun main(){
 
     while (true){
         if(CoinAcceptor.isThereAnyCoin()){
-            println("Quem levanta o Switch é GAY :-")
             CoinAcceptor.acceptCoin()
         }
     }

@@ -6,12 +6,13 @@ object LCD { // Escreve no LCD usando a interface a 4 bits.
 
     // Escreve um byte de comando/dados no LCD em paralelo
 //    private fun writeByteParallel(rs: Boolean, data: Int){
+//
 //        val dataLow = data.shl(1)
 //        val dataHigh = data.shr(3)
 //
 //        if(rs) HAL.setBits(rsMASK) else HAL.clrBits(rsMASK)
 //
-//        // Escreve parte baixa
+//        // Escreve parte alta
 //        HAL.writeBits(dataMASK, dataHigh)
 //        Time.sleep(30)
 //
@@ -21,7 +22,7 @@ object LCD { // Escreve no LCD usando a interface a 4 bits.
 //        HAL.clrBits(clkRegMASK)
 //        Time.sleep(30)
 //
-//        // Escreve parte alta
+//        // Escreve parte baixa
 //        HAL.writeBits(dataMASK, dataLow)
 //        Time.sleep(30)
 //
@@ -31,9 +32,9 @@ object LCD { // Escreve no LCD usando a interface a 4 bits.
 //        HAL.clrBits(clkRegMASK)
 //        Time.sleep(30)
 //
+//        //pulsar enable
 //        HAL.setBits(enableMASK)
 //        Time.sleep(30)
-//
 //        HAL.clrBits(enableMASK)
 //        Time.sleep(30)
 //
@@ -41,8 +42,7 @@ object LCD { // Escreve no LCD usando a interface a 4 bits.
     // Escreve um byte de comando/dados no LCD em série
     private fun writeByteSerial(rs: Boolean, data: Int){
         var dataToSend = 0
-        if (rs) dataToSend = 0b000000001.or(data.shl(1)) else dataToSend = data.shl(1)
-
+        dataToSend = if (rs) 0b000000001.or(data.shl(1)) else data.shl(1)
 
         SerialEmitter.send(addr = SerialEmitter.Destination.LCD, dataToSend, 9)
 
@@ -63,6 +63,8 @@ object LCD { // Escreve no LCD usando a interface a 4 bits.
     }
     // Envia a sequência de iniciação para comunicação a 4 bits.
     fun init(){
+        SerialEmitter.init()        //se usarmos o LCD parallel, não iniciamos o serial emitter
+
         Time.sleep(20)
         writeCMD(0b00110000)
         Time.sleep(10)
@@ -111,7 +113,6 @@ object LCD { // Escreve no LCD usando a interface a 4 bits.
 }
 
 fun main(){
-    HAL.init()
     KBD.init()
     LCD.init()
 

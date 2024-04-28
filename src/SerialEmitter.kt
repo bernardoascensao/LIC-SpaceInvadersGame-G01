@@ -5,10 +5,10 @@ object SerialEmitter { // Envia tramas para os diferentes módulos Serial Receiv
 
     // Inicia a classe
     fun init() {
-        HAL.init()
-        HAL.setBits(LCDselMASK)          //colocar o LCDsel a '1'
-        HAL.setBits(SCselMASK)           //colocar o SCsel a '1'
-        HAL.clrBits(SCLKMASK)            //colocar SLCK a '0'
+        HAL.init()                          //hal.init já satisfaz as 3 instruçoes abaixo
+        //HAL.setBits(LCDselMASK)          //colocar o LCDsel a '1'
+        //HAL.setBits(SCselMASK)           //colocar o SCsel a '1'
+        //HAL.clrBits(SCLKMASK)            //colocar SLCK a '0'
     }
 
     /*
@@ -42,6 +42,7 @@ object SerialEmitter { // Envia tramas para os diferentes módulos Serial Receiv
             //pulsar o SCLK
             HAL.setBits(SCLKMASK)
             HAL.clrBits(SCLKMASK)
+            print(sdx)
         }
 
         //enviar bit de paridade
@@ -50,7 +51,6 @@ object SerialEmitter { // Envia tramas para os diferentes módulos Serial Receiv
         }else{
             HAL.setBits(SDXMASK)
         }
-
         //pulsar SCLK
         HAL.setBits(SCLKMASK)
         HAL.clrBits(SCLKMASK)

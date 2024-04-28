@@ -4,7 +4,6 @@ object TUI {
     private var actuaColumn = 0
 
     fun init() {
-        HAL.init()
         KBD.init()
         LCD.init()
         actuaLine = 0
