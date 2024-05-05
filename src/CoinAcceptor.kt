@@ -4,10 +4,7 @@ object CoinAcceptor {
         HAL.clrBits(acceptCoinMASK)
     }
 
-    fun isThereAnyCoin(): Boolean{
-        //verificar se há moeda no chaveiro
-        return (HAL.readBits(CoinMASK) != 0)
-    }
+    val isThereAnyCoin get() = (HAL.readBits(CoinMASK) != 0)
 
     fun acceptCoin(){
         //pulsar sinal de accept
@@ -26,7 +23,7 @@ fun main(){
     CoinAcceptor.init()
 
     while (true){
-        if(CoinAcceptor.isThereAnyCoin()){
+        if(CoinAcceptor.isThereAnyCoin){
             CoinAcceptor.acceptCoin()
         }
     }

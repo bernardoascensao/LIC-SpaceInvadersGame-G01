@@ -42,7 +42,6 @@ object SerialEmitter { // Envia tramas para os diferentes módulos Serial Receiv
             //pulsar o SCLK
             HAL.setBits(SCLKMASK)
             HAL.clrBits(SCLKMASK)
-            print(sdx)
         }
 
         //enviar bit de paridade

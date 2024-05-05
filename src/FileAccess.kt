@@ -3,32 +3,25 @@ import java.io.BufferedWriter
 import java.io.File
 import java.io.FileReader
 import java.io.FileWriter
-import java.util.SortedMap
-import java.util.TreeMap
-
-
 
 data class Player(val name: String, val score: Int)
 class Top20Players{
-    private val map: SortedMap<Player, Int> = TreeMap( compareByDescending { it.score } )
+    private val list: MutableList<Player> = mutableListOf()
+    fun addPlayer(player: Player) {
+        list.add(player)
+        list.sortByDescending { it.score }
 
-    fun addPlayer(player: Player){
-        map[player] = player.score
-
-        if (map.size > 20){
-            map.remove(map.lastKey())
+        if (list.size > 20) {
+            list.removeAt(list.lastIndex)
         }
     }
-
     fun getTopPlayers(): List<Player> {
-        return map.keys.toList()
+        return list.toList()
     }
-
     operator fun iterator(): Iterator<Player> {
-        return map.keys.iterator()
+        return list.iterator()
     }
-
-    val size get() = map.size
+    val size get() = list.size
 }
 
 
@@ -37,8 +30,10 @@ object FileAccess{
     var coins = 0
     var numberOfGames = 0
 
-    fun readFileOfCoinsAndGames(fileName: String){
+    fun readFileOfCoinsAndGames( fileName: String ): Pair<Int, Int> {
         val file = File(fileName)
+        var coins = 0
+        var numOfGames = 0
 
         try {
             val bufferedReader = BufferedReader(FileReader(file))
@@ -52,7 +47,7 @@ object FileAccess{
                     val splited = line!!.split(";")
 
                     if (splited[0].uppercase() == "NUMBEROFGAMES" && splited[1].isNotBlank())
-                        numberOfGames = splited[1].toInt()
+                        numOfGames = splited[1].toInt()
 
                     else if (splited[0].uppercase() == "COINS" && splited[1].isNotBlank())
                         coins = splited[1].toInt()
@@ -64,6 +59,8 @@ object FileAccess{
         } catch (e: Exception) {
             println(e)
         }
+
+        return Pair<Int, Int>(coins, numOfGames)
     }
 
     fun readFileOfScores(fileName: String, scores: Top20Players){
@@ -79,11 +76,13 @@ object FileAccess{
                 if (line == null){
                     break
                 }
+                else if (line!!.isBlank() || line!!.isEmpty()){                     //se uma linha estiver vazia e nao for o fim do ficheiro, vamos diretamente
+                    continue                                                        //para a próxima iteração
+                }
                 val splited = line!!.split(";")                         //!!!!!!temos de especificar no relatório que
                 scores.addPlayer( Player(splited[0], splited[1].toInt()) )        //o primeiro elemento é obrigatorio ser o nome do player e o segundo ser o score
             }
 
-            println(scores.size)
             bufferedReader.close() // fecha o BufferedReader após a leitura
         } catch (e: Exception) {
             println(e)
