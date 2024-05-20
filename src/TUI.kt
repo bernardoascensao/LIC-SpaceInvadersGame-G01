@@ -141,6 +141,10 @@ object TUI {
     fun getActualPosition(): Pair<Int, Int> {
         return Pair(actuaLine, actuaColumn)
     }
+
+    fun writeSpecialChar(c: Int){
+        LCD.writeSpecialChar(c)
+    }
 }
 
 fun main() {

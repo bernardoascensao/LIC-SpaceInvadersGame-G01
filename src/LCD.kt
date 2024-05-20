@@ -1,5 +1,16 @@
 import isel.leic.utils.Time
 
+val specialArrChar = arrayOf(       // Char da nave
+    0b11100,
+    0b11000,
+    0b11100,
+    0b11111,
+    0b11100,
+    0b11000,
+    0b11100,
+    0b00000 )
+
+
 object LCD { // Escreve no LCD usando a interface a 4 bits.
     private const val LINES = 2  // Dimensão do display.
     private const val COLS = 16
@@ -50,8 +61,8 @@ object LCD { // Escreve no LCD usando a interface a 4 bits.
     }
     // Escreve um byte de comando/dados no LCD
     private fun writeByte(rs: Boolean, data: Int){
-        writeByteParallel(rs, data)
- //       writeByteSerial(rs, data)
+ //       writeByteParallel(rs, data)
+        writeByteSerial(rs, data)
     }
     // Escreve um comando no LCD
     private fun writeCMD(data: Int){
@@ -78,10 +89,22 @@ object LCD { // Escreve no LCD usando a interface a 4 bits.
         writeCMD(0b00000110)
 
         writeCMD(0b00001111)
+        //gravar char especial na CGRAM
+
+        writeCMD(0b01000000)       //set CGRAM address no indice 0
+        for (i in 0 until 7){
+            writeDATA(specialArrChar[i])
+        }
+        writeCMD(0b10000000)        //set DDRAM address no indice 0
+
     }
     // Escreve um caráter na posição corrente.
     fun write(c: Char){
         writeDATA(c.code)
+    }
+    // Escreve um caráter especial na posição corrente.
+    fun writeSpecialChar(c: Int){
+        writeDATA(c)
     }
     // Escreve uma 'string' na posição corrente.
     fun write(text: String){
@@ -116,10 +139,12 @@ fun main(){
     KBD.init()
     LCD.init()
 
+    LCD.clear()
+    LCD.writeSpecialChar(0)
     while(true){
         //LCD.cursor(0, 0)
-        val c = KBD.waitKey(8000)
-        LCD.write(c)
+        //val c = KBD.waitKey(8000)
+        //LCD.writeSpecialChar(0)
         //Time.sleep(2000)
         //LCD.cursor(1, 5)
     }

@@ -11,10 +11,10 @@ object SerialEmitter { // Envia tramas para os diferentes módulos Serial Receiv
         //HAL.clrBits(SCLKMASK)            //colocar SLCK a '0'
     }
 
-    /*
-    Envia uma trama para o SerialReceiver identificado o destino em addr,
-    os bits de dados em ‘data’ e em size o número de bits a enviar.
-    */
+    /**
+    * Envia uma trama para o SerialReceiver identificado o destino em addr,
+    * os bits de dados em ‘data’ e em size o número de bits a enviar.
+    **/
     fun send(addr: Destination, data: Int, size : Int) {
         if (addr == Destination.LCD){
             //caso o destino seja o LCD

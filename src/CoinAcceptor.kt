@@ -17,6 +17,14 @@ object CoinAcceptor {
         HAL.clrBits(acceptCoinMASK)
     }
 
+    fun hasCoin(): Boolean {
+        if (isThereAnyCoin){
+            acceptCoin()
+            return true
+        }
+        return false
+    }
+
 }
 
 fun main(){

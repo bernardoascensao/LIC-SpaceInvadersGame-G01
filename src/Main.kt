@@ -5,7 +5,6 @@ fun main() {
     val app = App()
     app.loadScoreAndStatistics()
 
-
     app.writeMessageCenterelized("Space Invaders", splitInTwoLines = true)
     Time.sleep(1000)                                  //esperar 10s como o enunciado pede
 
@@ -17,9 +16,13 @@ fun main() {
     while (true){
         app.printScoresOnLCD()
 
-        app.coins--
+        if (app.isMaintenance){
+            app.maintenanceMode()
+            break
+        }
         app.startNewGame(teste = false)
 
         app.registerScore()
     }
+    println("Aplication end succesfully")
 }

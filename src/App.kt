@@ -2,52 +2,23 @@ import isel.leic.utils.Time
 
 class App {
 
-    var coins = 0
-    private var numberOfGames = 0
+    private var coins: Int
+    private var numberOfGames: Int
     private val scores = Top20Players()
     private val listOfInvadors = listOf('0', '1', '2', '3', '4', '5', '6', '7', '8', '9')
     private var currScore: Int
+    private var isShutDown = false
+    var isMaintenance = false
 
     init {
         TUI.init()
         ScoreDisplay.init()
         CoinAcceptor.init()
         ScoreDisplay.off(false)
-        //M.init()
+        M.init()
         coins = 0
         numberOfGames = 0
         currScore = 0
-    }
-
-    /**
-     * Carrega o número de coins,o número de jogos realizados
-     * e as estatísticas dos jogadores
-     **/
-    fun loadScoreAndStatistics(){
-        val coinsAndGames = FileAccess.readFileOfCoinsAndGames("CoinsAndNumOfGames.txt")
-        coins = coinsAndGames.first
-        numberOfGames = coinsAndGames.second
-
-        FileAccess.readFileOfScores("scores.txt", scores)
-    }
-
-    /**
-     * Escreve uma mensagem no LCD
-     * @param message mensagem a ser escrita
-     **/
-    private fun writeMessage(message: String){
-        clearDisplay()
-        TUI.writeString(message)
-    }
-
-    /**
-     * Escreve uma mensagem centrada no LCD
-     * @param message mensagem a ser escrita
-     * @param splitInTwoLines se a mensagem vai ser dividida em duas linhas ou não
-     **/
-    fun writeMessageCenterelized(message: String, splitInTwoLines: Boolean = false){
-        clearDisplay()
-        TUI.writeStringCenterelized(message, splitInTwoLines)
     }
 
     /**
@@ -63,89 +34,29 @@ class App {
                 clearDisplay()
                 writeMessageInLine("Space Invaders", 0, centerelized = true)
                 writeMessageInLine("$playerRanking-${player.name}: ${player.score}", 1, centerelized = true)
-                //ScoreDisplay.setScore(player.score)
-                Time.sleep(500)
+                ScoreDisplay.setScore(player.score)
 
-                key = readKey(1500)
-                if(key == '5') {
-                    coins++
-                } else if (key == '*' && coins > 0) break
+                key = readKey(2000)
+                if (isInMaintenance()) break
+                else if(hasCoin()) coins++
+                else if (key == '*' && coins > 0) break
 
                 if (coins > 0) {
                     clearDisplay()
                     writeMessageInLine("Space Invaders", 0, centerelized = true)
                     writeMessageInLine("$coins$", 1, centerelized = false)
-                    //ScoreDisplay.setScore(player.score)
-                    Time.sleep(500)
+                    ScoreDisplay.setScore(player.score)
 
-                    key = readKey(1500)
-                    if (key == '*') break
-                    else if (key == '5') coins++
+                    key = readKey(2000)
+                    if (isInMaintenance()) break
+                    else if (key == '*') break
+                    else if (hasCoin()) coins++
                 }
 
                 playerRanking++
             }
-            if(key == '*' && coins > 0) break
+            if((key == '*' && coins > 0) || isMaintenance) break
         }
-    }
-
-    /**
-     * Escreve uma mensagem na linha especificada
-     * @param msg mensagem a ser escrita
-     * @param line linha onde a mensagem vai ser escrita
-     * @param centerelized se a mensagem vai ser centrada ou não
-     **/
-    private fun writeMessageInLine(msg: String, line: Int, centerelized: Boolean){
-        TUI.writeMessageInLine(msg, line, centerelized)
-    }
-
-    /**
-     * Atualiza a lista de invasores, ou seja, desloca todos os invasores uma posição para a esquerda
-     * e coloca um novo invasor na última posição da lista
-     * @param list lista de invasores
-     * @param newInvasor novo invasor a ser colocado na última posição da lista
-     **/
-    private fun updateListInvasors(list: MutableList<Char>, newInvasor: Char){
-        for (i in 0..< list.size){
-            if (i == list.size - 1){
-                list[i] = newInvasor
-            } else {
-                list[i] = list[i + 1]
-            }
-        }
-    }
-
-    /**
-     * Verifica qual o tipo de invasor na linha da frente, a seguir verifica se o
-     * tipo de invasor observado é do mesmo tipo que o canhão disparou, e caso seja,
-     * remove o invasor da linha da lista e retorna true, caso contrário retorna false
-     * @param list lista de invasores
-     * @param cannon o tipo que o canhão disparou
-     **/
-    private fun shotInvasorSucceeded(list: MutableList<Char>, cannon: Char): Boolean{
-        val firstInvasor = list.firstOrNull { it != ' ' }
-        if (firstInvasor == cannon){
-            val indexFirstInvasor = list.indexOf(firstInvasor)
-            list[indexFirstInvasor] = ' '
-            return true
-        }
-        return false
-    }
-
-    /**
-     * Imprime as bases para os canhões
-     **/
-    private fun printBasesForCannons(){
-        TUI.writeCharAt(0, 0, ']')
-        TUI.writeCharAt(1, 0, ']')
-    }
-
-    /**
-     * Posiciona o cursor na linha e coluna especificadas
-     * @param line linha onde o cursor vai ser posicionado
-     **/
-    private fun setCannonOnLine(line: Int){
-        TUI.setCursor(line, 1)
     }
 
     /**
@@ -171,6 +82,10 @@ class App {
             if (c == '#') break
         }
 
+        coins--
+        numberOfGames++
+        ScoreDisplay.setScore(0)
+
         writeMessageCenterelized("New Game!", splitInTwoLines = true)
         Time.sleep(1000)
         val list0 = MutableList(14) {' '}       //estado atual da linha 0 do LCD
@@ -178,25 +93,25 @@ class App {
         var cannon0 = ' '                           //o canhao começa vazio
         var cannon1 = ' '
         currScore = 0
-        var invasorPos0 = 15                        //os invasores começam a vir da esquerda
-        var invasorPos1 = 15
-        var myPos =  0                              //comecamos no canhao 0
+        var invasorPos0 = 15                        //posição do invasor mais próximo,
+        var invasorPos1 = 15                        // os invasores começam a vir da esquerda
+        var myPos =  0                              //a nave começa na posição 0
         clearDisplay()
-        printBasesForCannons()
-        setCannonOnLine(0)
+        printBasesForSpaceShip()
+        setSpaceShipOnLine(0)
 
         while (true){
             if (invasorPos0 in 2 .. 15 && invasorPos1 in 2 .. 15) {
                 //se os invasores ainda nao chegram
                 val newInvasrorLine0 = listOfInvadors.random()
                 val newInvasrorLine1 = listOfInvadors.random()
+
                 updateListInvasors(list0, newInvasrorLine0)    //atualiza apenas a lista
                 printInvasor(0, list0)                      //invasor na linha de cima
-                //list0[invasorPos0] = invasor_line_0
                 invasorPos0--
+
                 updateListInvasors(list1, newInvasrorLine1)    //atualiza apenas a lista
                 printInvasor(1, list1)                      //printa sempre na coluna 15
-                //list1[invasorPos1] = invasor_line_1
                 invasorPos1--
             } else {
                 //os invasores chegaram
@@ -220,10 +135,10 @@ class App {
                     '*' -> {                                                                    //muda de linha
                         if (myPos == 0){
                             myPos = 1
-                            setCannonOnLine(1)
+                            setSpaceShipOnLine(1)
                         } else {
                             myPos = 0
-                            setCannonOnLine(0)
+                            setSpaceShipOnLine(0)
                         }
                     }
                     in '0'..'9' -> {
@@ -237,23 +152,24 @@ class App {
                     }
                     '#' -> {
                         if (myPos == 0) {
-                            clearCannonOnLine(0)
                             if (shotInvasorSucceeded(list0, cannon0)){
                                 deleteInvasorOnLCD(0, invasorPos0 + 1)
                                 invasorPos0++
-                                if (!teste) currScore++
+                                currScore++
+                                ScoreDisplay.setScore(currScore)
+
                             }
                             cannon0 = ' '
                         } else /*myPos == 1*/ {
-                            clearCannonOnLine(1)
                             if (shotInvasorSucceeded(list1, cannon1)){
                                 deleteInvasorOnLCD(1, invasorPos1 + 1)
                                 invasorPos1++
-                                if (!teste) currScore++
+                                currScore++
+                                ScoreDisplay.setScore(currScore)
                             }
                             cannon1 = ' '
                         }
-                        printBasesForCannons()
+                        printBasesForSpaceShip()
                     }
                 }
             }
@@ -313,7 +229,170 @@ class App {
             }
         }
         scores.addPlayer(Player(name.toString(), currScore))
-        FileAccess.writeFileScores("scores.txt", scores)
+//        FileAccess.writeFileScores("scores.txt", scores)
+    }
+
+    /**
+     * Entra no modo de manutenção
+     */
+    fun maintenanceMode(){
+        while (true){
+            clearDisplay()
+            writeMessageInLine("Maintenance Mode", 0, centerelized = true)
+            writeMessageInLine("*-Count  #-ShutD", 1, centerelized = true)
+
+            val key = readKey(5000)
+            when (key) {
+                '*' -> {
+                    showCoinsAndGames()
+                }
+                '#' -> {
+                    shutDownMenu()
+                    if (isShutDown) break
+                }
+                in '0'..'9' -> {
+                    startNewGame(teste = true)
+                    clearDisplay()
+                    writeMessageInLine("***GameOver***", 0, centerelized = true)
+                    writeMessageInLine("Score: $currScore", 1, centerelized = false)
+                }
+            }
+        }
+    }
+
+    /**
+     * Imprime no LCD o número de coins e o número de jogos realizados
+     */
+    private fun showCoinsAndGames(){
+        clearDisplay()
+        writeMessageInLine("Coins: $coins", 0, centerelized = true)
+        writeMessageInLine("Games: $numberOfGames", 1, centerelized = true)
+        readKey(3000)
+    }
+
+    /**
+     * Imprime no LCD o menu de desligar o sistema
+     */
+    private fun shutDownMenu(){
+        clearDisplay()
+        writeMessageInLine("Shutdown", 0, centerelized = true)
+        writeMessageInLine("5-Yes   other-No", 1, centerelized = true)
+
+        val key = readKey(3000)
+        if (key == '5') {
+            FileAccess.writeFileCoinsAndNumOfGames("CoinsAndNumOfGames.txt", numberOfGames, coins)
+            FileAccess.writeFileScores("scores.txt", scores)
+            clearDisplay()
+            shutDown()
+        }
+    }
+
+    /**
+     * Desliga o sistema
+     **/
+    private fun shutDown(){
+        isShutDown = true
+    }
+
+    /**
+     * Carrega o número de coins,o número de jogos realizados
+     * e as estatísticas dos jogadores
+     **/
+    fun loadScoreAndStatistics(){
+        val coinsAndGames = FileAccess.readFileOfCoinsAndGames("CoinsAndNumOfGames.txt")
+        coins = coinsAndGames.first
+        numberOfGames = coinsAndGames.second
+
+        FileAccess.readFileOfScores("scores.txt", scores)
+    }
+
+    /**
+     * Escreve uma mensagem na linha especificada
+     * @param msg mensagem a ser escrita
+     * @param line linha onde a mensagem vai ser escrita
+     * @param centerelized se a mensagem vai ser centrada ou não
+     **/
+    private fun writeMessageInLine(msg: String, line: Int, centerelized: Boolean){
+        TUI.writeMessageInLine(msg, line, centerelized)
+    }
+
+    /**
+     * Atualiza a lista de invasores, ou seja, desloca todos os invasores uma posição para a esquerda
+     * e coloca um novo invasor na última posição da lista
+     * @param list lista de invasores
+     * @param newInvasor novo invasor a ser colocado na última posição da lista
+     **/
+    private fun updateListInvasors(list: MutableList<Char>, newInvasor: Char){
+        for (i in 0..< list.size){
+            if (i == list.size - 1){
+                list[i] = newInvasor
+            } else {
+                list[i] = list[i + 1]
+            }
+        }
+    }
+
+    /**
+     * Verifica qual o tipo de invasor na linha da frente, a seguir verifica se o
+     * tipo de invasor observado é do mesmo tipo que o canhão disparou, e caso seja,
+     * remove o invasor da linha da lista e retorna true, caso contrário retorna false
+     * @param list lista de invasores
+     * @param cannon o tipo que o canhão disparou
+     **/
+    private fun shotInvasorSucceeded(list: MutableList<Char>, cannon: Char): Boolean{
+        val firstInvasor = list.firstOrNull { it != ' ' }
+        if (firstInvasor == cannon){
+            val indexFirstInvasor = list.indexOf(firstInvasor)
+            list[indexFirstInvasor] = ' '
+            return true
+        }
+        return false
+    }
+
+    /**
+     * Imprime as bases para os canhões
+     **/
+    private fun printBasesForSpaceShip(){
+        TUI.writeCharAt(0, 0, ']')
+        TUI.writeCharAt(1, 0, ']')
+    }
+
+    /**
+     * Apaga a nave na linha atual,
+     * coloca o cursor na posição onde queremos colocar a nova nave
+     * e escreve a nave
+     **/
+    private fun setSpaceShipOnLine(line: Int){
+        if (line == 0){
+            clearCannonOnLine(1)
+            TUI.setCursor(line, 1)
+            writeSpaceShip()
+            TUI.setCursor(line, 1)                  //serve para quando mudamos a nave de linha, o cursor não ir temporáriamente para a frente
+        } else {
+            clearCannonOnLine(0)
+            TUI.setCursor(line, 1)
+            writeSpaceShip()
+            TUI.setCursor(line, 1)                  //serve para quando mudamos a nave de linha, o cursor não ir temporáriamente para a frente
+        }
+    }
+
+    /**
+     * Escreve uma mensagem no LCD
+     * @param message mensagem a ser escrita
+     **/
+    private fun writeMessage(message: String){
+        clearDisplay()
+        TUI.writeString(message)
+    }
+
+    /**
+     * Escreve uma mensagem centrada no LCD
+     * @param message mensagem a ser escrita
+     * @param splitInTwoLines se a mensagem vai ser dividida em duas linhas ou não
+     **/
+    fun writeMessageCenterelized(message: String, splitInTwoLines: Boolean = false){
+        clearDisplay()
+        TUI.writeStringCenterelized(message, splitInTwoLines)
     }
 
     /**
@@ -367,4 +446,28 @@ class App {
      **/
     private fun readKey(timeout: Long = 8000): Char = TUI.readKey(timeout)
 
+    /**
+     * Escreve o caracter especial da nave na posição atual do cursor
+     **/
+    private fun writeSpaceShip(){
+        TUI.writeSpecialChar(0)
+    }
+
+    /**
+     * Verifica se o sistema está em manutenção
+     */
+    private fun isInMaintenance(): Boolean {
+        if (M.isInMaintenance()){
+            isMaintenance = true
+            return true
+        } else {
+            isMaintenance = false
+            return false
+        }
+    }
+
+    /**
+     * Verifica se está a ser inserida uma moeda
+     */
+    private fun hasCoin(): Boolean = CoinAcceptor.hasCoin()
 }
