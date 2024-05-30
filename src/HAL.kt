@@ -27,7 +27,6 @@ object HAL { // Virtualiza o acesso ao sistema UsbPort
     fun init() {
         //apenas os bits do SS_Score e SS_LCD ficam ativos pois são active low
         atualStateOutput = 0b10000010
-        //atualStateOutput = 0b00000000
         UsbPort.write(atualStateOutput)
     }
     // Retorna true se o bit tiver o valor lógico ‘1’

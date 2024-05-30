@@ -3,7 +3,6 @@ import isel.leic.utils.Time
 fun main() {
     println("Hello World!")
     val app = App()
-    app.loadScoreAndStatistics()
 
     app.writeMessageCenterelized("Space Invaders", splitInTwoLines = true)
     Time.sleep(1000)                                  //esperar 10s como o enunciado pede
@@ -18,11 +17,16 @@ fun main() {
 
         if (app.isMaintenance){
             app.maintenanceMode()
-            break
+            if(app.isShutDown){
+                break
+            }
         }
-        app.startNewGame(teste = false)
 
-        app.registerScore()
+        if(app.gameMode){
+            app.startNewGame(teste = false)
+            app.registerScore()
+        }
+
     }
     println("Aplication end succesfully")
 }

@@ -12,8 +12,8 @@ val specialArrChar = arrayOf(       // Char da nave
 
 
 object LCD { // Escreve no LCD usando a interface a 4 bits.
-    private const val LINES = 2  // Dimensão do display.
-    private const val COLS = 16
+    const val LINES = 2  // Dimensão do display.
+    const val COLS = 16
 
     // Escreve um byte de comando/dados no LCD em paralelo
     private fun writeByteParallel(rs: Boolean, data: Int){
@@ -136,16 +136,20 @@ object LCD { // Escreve no LCD usando a interface a 4 bits.
 }
 
 fun main(){
-    KBD.init()
+    //KBD.init()
     LCD.init()
 
-    LCD.clear()
-    LCD.writeSpecialChar(0)
-    while(true){
-        //LCD.cursor(0, 0)
-        //val c = KBD.waitKey(8000)
-        //LCD.writeSpecialChar(0)
-        //Time.sleep(2000)
-        //LCD.cursor(1, 5)
-    }
+//    LCD.clear()
+//    LCD.writeSpecialChar(0)
+//    while(true){
+//        LCD.clear()
+//        LCD.cursor(0, 0)
+//        val c = KBD.waitKey(8000)
+//        if(c != 0.toChar()){
+//            LCD.write(c)
+//        }
+//        else{
+//            LCD.write("Timeout")
+//        }
+//    }
 }

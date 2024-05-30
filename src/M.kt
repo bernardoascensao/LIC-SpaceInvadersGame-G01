@@ -8,3 +8,22 @@ object M {
 //        return key == '1'
     }
 }
+
+fun main() {
+    M.init()
+
+    while (true) {
+        val read = readln()
+        if (read == "5") {
+            HAL.setBits(MaintenanceMASK)
+        } else if (read == "0") {
+            HAL.clrBits(MaintenanceMASK)
+        }
+
+        if (M.isInMaintenance()) {
+            println("Maintenance mode")
+        } else {
+            println("Non Maintenance")
+        }
+    }
+}

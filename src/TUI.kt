@@ -1,4 +1,6 @@
 object TUI {
+    const val LINES = LCD.LINES
+    const val COLS = LCD.COLS
 
     private var actuaLine = 0
     private var actuaColumn = 0

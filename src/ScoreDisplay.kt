@@ -63,6 +63,4 @@ fun main() {
     ScoreDisplay.off(false)
 
     ScoreDisplay.setScore(53)
-
-
 }

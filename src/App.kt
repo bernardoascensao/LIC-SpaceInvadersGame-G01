@@ -1,14 +1,21 @@
 import isel.leic.utils.Time
 
 class App {
+    private val COLUMNS = TUI.COLS
+    private val LINES = TUI.LINES
+    private val empty = ' '
 
-    private var coins: Int
-    private var numberOfGames: Int
+
+    private var coins: Int = 0
+    private var credits: Int = 0
+    private var numberOfGames: Int = 0
+
     private val scores = Top20Players()
     private val listOfInvadors = listOf('0', '1', '2', '3', '4', '5', '6', '7', '8', '9')
     private var currScore: Int
-    private var isShutDown = false
+    var isShutDown = false
     var isMaintenance = false
+    var gameMode = false
 
     init {
         TUI.init()
@@ -16,9 +23,8 @@ class App {
         CoinAcceptor.init()
         ScoreDisplay.off(false)
         M.init()
-        coins = 0
-        numberOfGames = 0
         currScore = 0
+        loadScoreAndStatistics()
     }
 
     /**
@@ -27,8 +33,7 @@ class App {
      * até o 'user' premir '*' para começar o jogo
      **/
     fun printScoresOnLCD(){
-        var key = ' '
-        while (key != '*' || coins >= 0) {
+        while (!gameMode && !isMaintenance) {
             var playerRanking = 1
             for (player in scores){
                 clearDisplay()
@@ -36,26 +41,24 @@ class App {
                 writeMessageInLine("$playerRanking-${player.name}: ${player.score}", 1, centerelized = true)
                 ScoreDisplay.setScore(player.score)
 
-                key = readKey(2000)
+                var key = readKey(2000)
                 if (isInMaintenance()) break
-                else if(hasCoin()) coins++
-                else if (key == '*' && coins > 0) break
+                else if(hasCoin()){ coins += 2; credits += 2 }
+                else if (key == '*' && credits > 0){ gameMode = true; break }
 
-                if (coins > 0) {
+                if (credits > 0) {
                     clearDisplay()
                     writeMessageInLine("Space Invaders", 0, centerelized = true)
-                    writeMessageInLine("$coins$", 1, centerelized = false)
+                    writeMessageInLine("$credits$", 1, centerelized = false)
                     ScoreDisplay.setScore(player.score)
 
                     key = readKey(2000)
                     if (isInMaintenance()) break
                     else if (key == '*') break
-                    else if (hasCoin()) coins++
+                    else if (hasCoin()){ coins += 2; credits +=2 }
                 }
-
                 playerRanking++
             }
-            if((key == '*' && coins > 0) || isMaintenance) break
         }
     }
 
@@ -66,7 +69,7 @@ class App {
      * @param teste se é um teste ou não (caso seja o score não é contabilizado)
      **/
     fun startNewGame(teste: Boolean){
-        if (!teste && coins <= 0) {
+        if (!teste && credits <= 0) {
             writeMessage("No credits. Press '*' to exit")
             while (true){
                 val c = readKey(1000)
@@ -76,32 +79,26 @@ class App {
             return
         }
 
-        writeMessage("Press '#' to start")
-        while (true){
-            val c = readKey(1000)
-            if (c == '#') break
-        }
-
-        coins--
+        credits--
         numberOfGames++
         ScoreDisplay.setScore(0)
 
         writeMessageCenterelized("New Game!", splitInTwoLines = true)
-        Time.sleep(1000)
-        val list0 = MutableList(14) {' '}       //estado atual da linha 0 do LCD
-        val list1 = MutableList(14) {' '}       //estado atual da linha 1 do LCD
-        var cannon0 = ' '                           //o canhao começa vazio
-        var cannon1 = ' '
+        sleep(1)
+        val list0 = MutableList(COLUMNS - 2) {empty}       //estado atual da linha 0 do LCD
+        val list1 = MutableList(COLUMNS - 2) {empty}       //estado atual da linha 1 do LCD
+        var cannon0 = empty                                     //o canhao começa vazio
+        var cannon1 = empty
         currScore = 0
-        var invasorPos0 = 15                        //posição do invasor mais próximo,
-        var invasorPos1 = 15                        // os invasores começam a vir da esquerda
-        var myPos =  0                              //a nave começa na posição 0
+        var invasorPos0 = COLUMNS - 1                        //posição do invasor mais próximo,
+        var invasorPos1 = COLUMNS - 1                        //os invasores começam a vir da esquerda
+        var myPos =  0                                       //a nave começa na posição 0
         clearDisplay()
         printBasesForSpaceShip()
         setSpaceShipOnLine(0)
 
         while (true){
-            if (invasorPos0 in 2 .. 15 && invasorPos1 in 2 .. 15) {
+            if (invasorPos0 > (COLUMNS - list0.size) && invasorPos1 > (COLUMNS - list1.size)) {
                 //se os invasores ainda nao chegram
                 val newInvasrorLine0 = listOfInvadors.random()
                 val newInvasrorLine1 = listOfInvadors.random()
@@ -116,7 +113,7 @@ class App {
             } else {
                 //os invasores chegaram
                 writeMessage("End! Score: $currScore")
-                Time.sleep(2000)
+                sleep(1)
                 clearDisplay()
                 break
             }
@@ -157,9 +154,8 @@ class App {
                                 invasorPos0++
                                 currScore++
                                 ScoreDisplay.setScore(currScore)
-
                             }
-                            cannon0 = ' '
+                            cannon0 = empty
                         } else /*myPos == 1*/ {
                             if (shotInvasorSucceeded(list1, cannon1)){
                                 deleteInvasorOnLCD(1, invasorPos1 + 1)
@@ -167,14 +163,14 @@ class App {
                                 currScore++
                                 ScoreDisplay.setScore(currScore)
                             }
-                            cannon1 = ' '
+                            cannon1 = empty
                         }
                         printBasesForSpaceShip()
                     }
                 }
             }
         }
-        writeMessage("End of Game")
+        gameMode = false
     }
 
     /**
@@ -183,11 +179,12 @@ class App {
      **/
     fun registerScore(){
         clearDisplay()
+        val msg = "Name:"
         writeMessageInLine("Score:$currScore", 1, centerelized = false)
-        writeMessageInLine("Name:", 0, centerelized = false)
+        writeMessageInLine(msg, 0, centerelized = false)
 
         val name = StringBuilder('A'.toString())
-        var cursor = 5
+        var cursor = msg.length
         var index = 0
         var currChar = 'A'
         TUI.writeCharAt(0, cursor, 'A')
@@ -196,16 +193,19 @@ class App {
             when (key) {
                 '5' -> break
                 '4' ->{
-                    if (cursor > 5) moveCursor(left = true, right = false).also { cursor--; index-- }
+                    if (cursor > msg.length) moveCursor(left = true, right = false).also { cursor--; index-- }
                 }
                 '6' -> {
-                    moveCursor(right = true, left = false)
-                    cursor++; currChar = 'A'
-                    if (index == name.length - 1) {
-                        name.append('A')
-                        TUI.writeCharAt(0, cursor, 'A')
+                    if (cursor < COLUMNS - 1){
+                        moveCursor(right = true, left = false)
+                        cursor++
+                        if (index == name.length - 1) {
+                            currChar = 'A'
+                            name.append(currChar)
+                            TUI.writeCharAt(0, cursor, currChar)
+                        }
+                        index++
                     }
-                    index++
                 }
                 '2' -> {
                     if (currChar < 'Z') currChar++
@@ -229,26 +229,27 @@ class App {
             }
         }
         scores.addPlayer(Player(name.toString(), currScore))
-//        FileAccess.writeFileScores("scores.txt", scores)
     }
 
     /**
      * Entra no modo de manutenção
      */
     fun maintenanceMode(){
-        while (true){
+
+        while (isMaintenance){
             clearDisplay()
             writeMessageInLine("Maintenance Mode", 0, centerelized = true)
             writeMessageInLine("*-Count  #-ShutD", 1, centerelized = true)
 
-            val key = readKey(5000)
+            val key = readKey(1000)
+            if(!isInMaintenance()) break
             when (key) {
                 '*' -> {
                     showCoinsAndGames()
                 }
                 '#' -> {
                     shutDownMenu()
-                    if (isShutDown) break
+                    break
                 }
                 in '0'..'9' -> {
                     startNewGame(teste = true)
@@ -470,4 +471,9 @@ class App {
      * Verifica se está a ser inserida uma moeda
      */
     private fun hasCoin(): Boolean = CoinAcceptor.hasCoin()
+
+    /**
+     * Espera por um determinado tempo em segundos
+     */
+    private fun sleep(seconds: Long): Unit = Time.sleep(seconds * 1000)
 }
