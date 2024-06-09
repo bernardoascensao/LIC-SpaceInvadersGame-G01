@@ -5,17 +5,16 @@ class App {
     private val LINES = TUI.LINES
     private val empty = ' '
 
-
-    private var coins: Int = 0
     private var credits: Int = 0
-    private var numberOfGames: Int = 0
 
-    private val scores = Top20Players()
     private val listOfInvadors = listOf('0', '1', '2', '3', '4', '5', '6', '7', '8', '9')
     private var currScore: Int
     var isShutDown = false
     var isMaintenance = false
     var gameMode = false
+
+    private val stats = Statistics
+    private val scores = Scores
 
     init {
         TUI.init()
@@ -35,15 +34,15 @@ class App {
     fun printScoresOnLCD(){
         while (!gameMode && !isMaintenance) {
             var playerRanking = 1
-            for (player in scores){
+            for (player in scores.list){
                 clearDisplay()
                 writeMessageInLine("Space Invaders", 0, centerelized = true)
                 writeMessageInLine("$playerRanking-${player.name}: ${player.score}", 1, centerelized = true)
                 ScoreDisplay.setScore(player.score)
 
-                var key = readKey(2000)
+                var key = readKey(1000)
                 if (isInMaintenance()) break
-                else if(hasCoin()){ coins += 2; credits += 2 }
+                else if(hasCoin()){ stats.coins += 2; credits += 2 }
                 else if (key == '*' && credits > 0){ gameMode = true; break }
 
                 if (credits > 0) {
@@ -52,10 +51,10 @@ class App {
                     writeMessageInLine("$credits$", 1, centerelized = false)
                     ScoreDisplay.setScore(player.score)
 
-                    key = readKey(2000)
+                    key = readKey(1000)
                     if (isInMaintenance()) break
                     else if (key == '*') break
-                    else if (hasCoin()){ coins += 2; credits +=2 }
+                    else if (hasCoin()){ stats.coins += 2; credits +=2 }
                 }
                 playerRanking++
             }
@@ -80,7 +79,7 @@ class App {
         }
 
         credits--
-        numberOfGames++
+        stats.numberOfGames++
         ScoreDisplay.setScore(0)
 
         writeMessageCenterelized("New Game!", splitInTwoLines = true)
@@ -228,7 +227,7 @@ class App {
                 }
             }
         }
-        scores.addPlayer(Player(name.toString(), currScore))
+        scores.list.addPlayer(Player(name.toString(), currScore))
     }
 
     /**
@@ -266,8 +265,8 @@ class App {
      */
     private fun showCoinsAndGames(){
         clearDisplay()
-        writeMessageInLine("Coins: $coins", 0, centerelized = true)
-        writeMessageInLine("Games: $numberOfGames", 1, centerelized = true)
+        writeMessageInLine("Coins: ${stats.coins}", 0, centerelized = true)
+        writeMessageInLine("Games: ${stats.numberOfGames}", 1, centerelized = true)
         readKey(3000)
     }
 
@@ -281,8 +280,8 @@ class App {
 
         val key = readKey(3000)
         if (key == '5') {
-            FileAccess.writeFileCoinsAndNumOfGames("CoinsAndNumOfGames.txt", numberOfGames, coins)
-            FileAccess.writeFileScores("scores.txt", scores)
+            Statistics.writeStatistics()
+            Scores.writeScores()
             clearDisplay()
             shutDown()
         }
@@ -300,11 +299,8 @@ class App {
      * e as estatísticas dos jogadores
      **/
     fun loadScoreAndStatistics(){
-        val coinsAndGames = FileAccess.readFileOfCoinsAndGames("CoinsAndNumOfGames.txt")
-        coins = coinsAndGames.first
-        numberOfGames = coinsAndGames.second
-
-        FileAccess.readFileOfScores("scores.txt", scores)
+        stats.readStatistics()
+        scores.readScores()
     }
 
     /**
@@ -470,7 +466,7 @@ class App {
     /**
      * Verifica se está a ser inserida uma moeda
      */
-    private fun hasCoin(): Boolean = CoinAcceptor.hasCoin()
+    private fun hasCoin(timeout: Long = 2000): Boolean = CoinAcceptor.hasCoin(timeout)
 
     /**
      * Espera por um determinado tempo em segundos

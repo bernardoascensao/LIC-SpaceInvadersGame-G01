@@ -1,3 +1,5 @@
+import isel.leic.utils.Time
+
 object CoinAcceptor {
 
     fun init() {
@@ -17,10 +19,16 @@ object CoinAcceptor {
         HAL.clrBits(acceptCoinMASK)
     }
 
-    fun hasCoin(): Boolean {
-        if (isThereAnyCoin){
-            acceptCoin()
-            return true
+    fun hasCoin(timeout : Long): Boolean {
+        val first_call_time = Time.getTimeInMillis()
+        var current_time = first_call_time
+
+        while (current_time - first_call_time < timeout){
+            if (isThereAnyCoin){
+                acceptCoin()
+                return true
+            }
+            current_time = Time.getTimeInMillis()
         }
         return false
     }
